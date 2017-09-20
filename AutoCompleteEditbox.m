@@ -11,23 +11,25 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         FontWeight  = 'normal'
         HorizontalAlignment = 'left'
         Parent      = []
-        Position    = [20 20 200 26]
+        Position    = [60 60 200 26]
         String      = ''
         Tag         = ''
+        Units       = 'pixels'
         UserData    = []
         Visible     = true
     end
     
     properties (SetAccess = protected) % TODO: change to protected (set & get)
-        jSearchText
-        hSearchText
+        jSearchField
+        hSearchField
         jComboBox
         hComboBox
     end
     
     %% Constructor
     methods
-        function this = AutoCompleteEditbox()
+        function this = AutoCompleteEditbox(varargin)
+            createObjectInFigure(this);
         end
     end
     
@@ -37,6 +39,20 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     %% Private methods
     methods (Access = private)
+        function createObjectInFigure(this)
+            % create the JComboBox first so that it appears hidden behind the textbox
+            [jComboBox, hComboBox] = javacomponent(javax.swing.JComboBox);
+            
+            % now create the search field so that it sits on top of the combobox
+            jSearchField = com.mathworks.widgets.SearchTextField;
+            [jSearchField, hSearchField] = javacomponent(jSearchField.getComponent);
+            
+            % update object state
+            this.jSearchField = jSearchField; %#ok<*PROP>
+            this.hSearchField = hSearchField;
+            this.jComboBox = jComboBox; 
+            this.hComboBox = hComboBox;
+        end
     end
 end
 
