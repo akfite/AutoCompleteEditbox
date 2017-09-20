@@ -2,7 +2,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     %AUTOCOMPLETEEDITBOX Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties (SetAccess = protected)
+    properties
         BackgroundColor = [0.94 0.94 0.94]
         Enable      = true
         FontAngle   = 'normal'
@@ -52,6 +52,61 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.hSearchField = hSearchField;
             this.jComboBox = jComboBox; 
             this.hComboBox = hComboBox;
+        end
+    end
+    
+    %% Accessors
+    methods (Access = private)
+        function linkedSetterFcn(this, prop, value)
+            % would prefer to use a linkprop but doesn't seem to be supported for java objects
+            set(this.hComboBox, prop, value);
+            set(this.hSearchField, prop, value);
+        end
+    end
+    
+    methods
+        function set.BackgroundColor(this, value)
+        end
+        
+        function set.Enable(this, value)
+        end
+        
+        function set.FontAngle(this, value)
+        end
+        
+        function set.FontName(this, value)
+        end
+        
+        function set.FontSize(this, value)
+        end
+        
+        function set.FontWeight(this, value)
+        end
+        
+        function set.HorizontalAlignment(this, value)
+        end
+        
+        function set.Parent(this, value)
+            linkedSetterFcn(this, 'Parent', value)       
+        end
+        
+        function set.Position(this, value)
+            linkedSetterFcn(this, 'Position', value)
+        end
+        
+        function set.String(this, value)
+        end
+        
+        function set.Tag(this, value)
+        end
+        
+        function set.Units(this, value)
+        end
+        
+        function set.UserData(this, value)
+        end
+        
+        function set.Visible(this, value)
         end
     end
 end
