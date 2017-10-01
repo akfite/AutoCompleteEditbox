@@ -14,6 +14,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         Position    = [200 200 200 26]
         String      = ''
         Tag         = ''
+        TooltipString = ''
         Units       = 'pixels'
         UserData    = []
         Visible     = true
@@ -72,7 +73,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     %% Accessors (setters)
     methods
-        function this = set.BackgroundColor(this, value) %#ok<*MCSV,*MCHM,*MCHV3>
+        function set.BackgroundColor(this, value) %#ok<*MCSV,*MCHM,*MCHV3>
             p = inputParser;
             addRequired(p, 'BackgroundColor', ...
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
@@ -85,7 +86,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.BackgroundColor = bckgColor;
         end
         
-        function this = set.Enabled(this, value)
+        function set.Enabled(this, value)
             p = inputParser;
             addRequired(p, 'Enabled', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
             parse(p, value);
@@ -96,7 +97,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.Enabled = enableState;
         end
         
-        function this = set.FontColor(this, value)
+        function set.FontColor(this, value)
             p = inputParser;
             addRequired(p, 'FontColor', ...
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
@@ -109,38 +110,46 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.FontColor = fontColor;
         end
         
-        function this = set.FontSize(this, value)
+        function set.FontSize(this, value)
         end
         
-        function this = set.FontWeight(this, value)
+        function set.FontWeight(this, value)
         end
         
-        function this = set.HorizontalAlignment(this, value)
+        function set.HorizontalAlignment(this, value)
         end
         
-        function this = set.Parent(this, value)
+        function set.Parent(this, value)
             set(this.hComboBox, 'Parent', value); %#ok<*MCSUP>
             set(this.hTextField, 'Parent', value);
         end
         
-        function this = set.Position(this, value)
+        function set.Position(this, value)
             set(this.hComboBox, 'Position', value);
             set(this.hTextField, 'Position', value);
         end
         
-        function this = set.String(this, value)
+        function set.String(this, value)
         end
         
-        function this = set.Tag(this, value)
+        function set.Tag(this, value)
         end
         
-        function this = set.Units(this, value)
+        function set.TooltipString(this, value)
+            p = inputParser;
+            addRequired(p, 'TooltipString', @(x) validateattributes(x, {'char'},{'vector'}));
+            parse(p, value);
+            
+            this.jTextField.setToolTipText(char(value));
         end
         
-        function this = set.UserData(this, value)
+        function set.Units(this, value)
         end
         
-        function this = set.Visible(this, value)
+        function set.UserData(this, value)
+        end
+        
+        function set.Visible(this, value)
         end
     end
 end
