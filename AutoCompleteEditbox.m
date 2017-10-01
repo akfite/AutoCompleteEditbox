@@ -5,9 +5,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     properties
         BackgroundColor = [255 255 255]
         CompletionList = {'sample string'; 'test string'; 'sample test'}
-        Enable      = true
-        FontAngle   = 'normal'
-        FontName    = 'Helvetica'
+        Enabled     = true
         FontSize    = 10
         FontWeight  = 'normal'
         FontColor   = [0 0 0]
@@ -87,10 +85,15 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.BackgroundColor = bckgColor;
         end
         
-        function this = set.Enable(this, value)
-        end
-        
-        function this = set.FontAngle(this, value)
+        function this = set.Enabled(this, value)
+            p = inputParser;
+            addRequired(p, 'Enabled', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
+            parse(p, value);
+            
+            enableState = logical(p.Results.Enabled);
+            this.jTextField.setEnabled(enableState);
+            this.jComboBox.setEnabled(enableState);
+            this.Enabled = enableState;
         end
         
         function this = set.FontColor(this, value)
@@ -104,9 +107,6 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             jColor = java.awt.Color(fontColor(1), fontColor(2), fontColor(3));
             this.jTextField.setForeground(jColor);
             this.FontColor = fontColor;
-        end
-        
-        function this = set.FontName(this, value)
         end
         
         function this = set.FontSize(this, value)
