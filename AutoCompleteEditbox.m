@@ -22,10 +22,8 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     end
     
     properties (SetAccess = protected) % TODO: change to protected (set & get)
-        jSearchField
-        hSearchField
-        jhSearchField
-        jSearchText
+        jTextField
+        hTextField
         jComboBox
         hComboBox
     end
@@ -51,19 +49,17 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             [jComboBox, hComboBox] = javacomponent(javax.swing.JComboBox);
             
             % now create the search field so that it sits on top of the combobox
-            jSearchField = com.mathworks.widgets.SearchTextField;
-            [jhSearchField, hSearchField] = javacomponent(jSearchField.getComponent);
+            jTextField = javax.swing.JTextField;
+            [jTextField, hTextField] = javacomponent(jTextField);
             
             % update object state
-            this.jSearchField = jSearchField; %#ok<*PROP>
-            this.hSearchField = hSearchField;
-            this.jhSearchField = jhSearchField;
-            this.jSearchText = jSearchField.getComponent.getComponent(0);
+            this.jTextField = jTextField; %#ok<*PROP>
+            this.hTextField = hTextField;     
             this.jComboBox = jComboBox; 
             this.hComboBox = hComboBox;
             
             % DEBUG --------------------------------------------
-            set(this.hSearchField, 'position', this.Position);
+            set(this.hTextField, 'position', this.Position);
             set(this.hComboBox, 'position', this.Position);
             % --------------------------------------------------
         end
@@ -72,7 +68,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     %% Accessors (getters)
     methods
         function string = get.String(this)
-            string = this.jSearchField.getComponent(0).getText;
+            string = char(this.jTextField.getText);
         end
     end
     
@@ -87,7 +83,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             % jSearch accepts 8-bit ints, so convert to correct format & set props
             bckgColor = uint8(p.Results.BackgroundColor);
             jColor = java.awt.Color(bckgColor(1), bckgColor(2), bckgColor(3));
-            this.jhSearchField.setBackground(jColor);
+            this.jTextField.setBackground(jColor);
             this.BackgroundColor = bckgColor;
         end
         
@@ -106,7 +102,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             % jSearch accepts 8-bit ints, so convert to correct format & set props
             fontColor = uint8(p.Results.FontColor);
             jColor = java.awt.Color(fontColor(1), fontColor(2), fontColor(3));
-            this.jSearchText.setForeground(jColor);
+            this.jTextField.setForeground(jColor);
             this.FontColor = fontColor;
         end
         
@@ -124,12 +120,12 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         
         function this = set.Parent(this, value)
             set(this.hComboBox, 'Parent', value); %#ok<*MCSUP>
-            set(this.hSearchField, 'Parent', value);
+            set(this.hTextField, 'Parent', value);
         end
         
         function this = set.Position(this, value)
             set(this.hComboBox, 'Position', value);
-            set(this.hSearchField, 'Position', value);
+            set(this.hTextField, 'Position', value);
         end
         
         function this = set.String(this, value)
