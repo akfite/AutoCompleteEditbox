@@ -10,6 +10,11 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         FontWeight  = 'normal'
         FontColor   = [0 0 0]
         HorizontalAlignment = 'left'
+    end
+    properties (SetAccess = protected)
+        Matches % i want the prop list alphabetical but i cba overloading disp() right now
+    end
+    properties
         Parent      = []
         Position    = [200 200 200 26]
         String      = ''
@@ -19,11 +24,13 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         Visible     = true
     end
     
-    properties (SetAccess = protected) % TODO: change to protected (set & get)
+    properties (SetAccess = protected) % DEBUG: will change to fully protected
         jTextField
         hTextField
         jComboBox
         hComboBox
+        
+        LastSearch
     end
     
     %% Constructor
@@ -34,10 +41,6 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             
             % parse args and apply properties to default if not provided
         end
-    end
-    
-    %% Public interface
-    methods
     end
     
     %% Private methods
@@ -56,10 +59,66 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.jComboBox = jComboBox; 
             this.hComboBox = hComboBox;
             
+            % setup keypress callback functions
+            jTextHCallback = handle(jTextField,'CallbackProperties');
+            set(jTextHCallback, 'KeyPressedCallback', @(src,evnt) keyRoutingFcn(this, src, evnt));
+            
             % DEBUG --------------------------------------------
             set(this.hTextField, 'position', this.Position);
             set(this.hComboBox, 'position', this.Position);
             % --------------------------------------------------
+        end
+        
+        function keyRoutingFcn(this, ~, evnt)
+            keyCode = get(evnt,'ExtendedKeyCode');
+            
+            switch keyCode
+                case 10 % ENTER will select the current item from the jComboBox
+                    if any(this.Matches) && this.jComboBox.PopupVisible
+                        selectedText = char(this.jComboBox.getSelectedItem);
+                        selectedText = regexprep(selectedText, '<[^>]+>', '');
+                        this.jTextField.setText(selectedText);
+                        this.jComboBox.hidePopup;
+                    end
+                case 27 % ESC hides the popup
+                    this.jComboBox.hidePopup;
+                case [38 40] % UP/DOWN will scroll through jComboBox suggestions
+                otherwise
+                    autoComplete(this)
+            end
+        end
+        
+        function autoComplete(this)
+            textInput = this.String;
+            textInput = strrep(textInput, '*', '.*'); % turn wildcards into valid regexp
+            
+            if ~strcmpi(textInput, this.LastSearch)
+                this.LastSearch = textInput;
+            else
+                this.jComboBox.showPopup;
+                return; % abort early if the search hasn't changed
+            end
+            
+            matchedText = regexpi(this.CompletionList, textInput, 'match','once');
+            matchIndex = ~cellfun('isempty', matchedText);
+            
+            if ~any(matchIndex)
+                this.jComboBox.hidePopup;
+            end
+            
+            % highlight the matched text in the popup
+            matchedText = matchedText(matchIndex);
+            matchList = this.CompletionList(matchIndex);
+            matchList = strrep(matchList, matchedText, strcat('<b><font color=blue>', matchedText, '</b></font>'));
+            matchList = strcat('<html>',matchList,'</html>');
+            
+            try
+                this.jComboBox.setModel(javax.swing.DefaultComboBoxModel(matchList));
+                this.jComboBox.showPopup;
+            catch ex
+            end
+            
+            this.Matches = matchIndex;
         end
     end
     
