@@ -139,6 +139,13 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         end
         
         function set.String(this, value)
+            p = inputParser;
+            addRequired(p, 'String', @(x) validateattributes(x, {'string','char'}, {}));
+            parse(p, value);
+            
+            textString = char(value);
+            this.jTextField.setText(textString);
+            this.String = textString;
         end
         
         function set.Tag(this, value)
