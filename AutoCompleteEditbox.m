@@ -73,13 +73,13 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     %% Accessors (setters)
     methods
-        function set.BackgroundColor(this, value) %#ok<*MCSV,*MCHM,*MCHV3>
+        function set.BackgroundColor(this, value)
             p = inputParser;
             addRequired(p, 'BackgroundColor', ...
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
             parse(p, value);
             
-            % jSearch accepts 8-bit ints, so convert to correct format & set props
+            % java colors are 8-bit ints, so convert to correct format & set props
             bckgColor = uint8(p.Results.BackgroundColor);
             jColor = java.awt.Color(bckgColor(1), bckgColor(2), bckgColor(3));
             this.jTextField.setBackground(jColor);
@@ -103,7 +103,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
             parse(p, value);
             
-            % jSearch accepts 8-bit ints, so convert to correct format & set props
+            % java colors are 8-bit ints, so convert to correct format & set props
             fontColor = uint8(p.Results.FontColor);
             jColor = java.awt.Color(fontColor(1), fontColor(2), fontColor(3));
             this.jTextField.setForeground(jColor);
@@ -117,6 +117,15 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         end
         
         function set.HorizontalAlignment(this, value)
+            p = inputParser;
+            addRequired(p, 'HorizontalAlignment',...
+                @(x) ischar(validatestring(x, {'left','center','right'})));
+            parse(p, value);
+            
+            alignment = p.Results.HorizontalAlignment;
+            jAlignment = javax.swing.JTextField.(upper(alignment));
+            this.jTextField.setHorizontalAlignment(jAlignment);
+            this.HorizontalAlignment = alignment;
         end
         
         function set.Parent(this, value)
