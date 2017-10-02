@@ -13,7 +13,6 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         Parent      = []
         Position    = [200 200 200 26]
         String      = ''
-        Tag         = ''
         TooltipString = ''
         Units       = 'pixels'
         UserData    = []
@@ -91,7 +90,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             addRequired(p, 'Enabled', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
             parse(p, value);
             
-            enableState = logical(p.Results.Enabled);
+            enableState = logical(value);
             this.jTextField.setEnabled(enableState);
             this.jComboBox.setEnabled(enableState);
             this.Enabled = enableState;
@@ -104,16 +103,37 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             parse(p, value);
             
             % java colors are 8-bit ints, so convert to correct format & set props
-            fontColor = uint8(p.Results.FontColor);
+            fontColor = uint8(value);
             jColor = java.awt.Color(fontColor(1), fontColor(2), fontColor(3));
             this.jTextField.setForeground(jColor);
             this.FontColor = fontColor;
         end
         
         function set.FontSize(this, value)
+            p = inputParser;
+            addRequired(p, 'FontSize', ...
+                @(x) validateattributes(x, {'numeric'},{'scalar','nonnan','positive'}));
+            parse(p, value);
+            
+            fontSize = this.jTextField.getFont.deriveFont(value);
+            this.jTextField.setFont(fontSize);
+            this.FontSize = value;
         end
         
         function set.FontWeight(this, value)
+            p = inputParser;
+            addRequired(p, 'FontWeight', @(x) ischar(validatestring(x, {'normal','bold'})));
+            parse(p, value);
+            
+            fontWeight = lower(value);
+            switch fontWeight
+                case 'normal'
+                    jFont = this.jTextField.getFont.deriveFont(uint8(java.awt.Font.PLAIN));
+                case 'bold'
+                    jFont = this.jTextField.getFont.deriveFont(uint8(java.awt.Font.BOLD));
+            end
+            this.jTextField.setFont(jFont);
+            this.FontWeight = fontWeight;
         end
         
         function set.HorizontalAlignment(this, value)
@@ -122,8 +142,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
                 @(x) ischar(validatestring(x, {'left','center','right'})));
             parse(p, value);
             
-            alignment = p.Results.HorizontalAlignment;
-            jAlignment = javax.swing.JTextField.(upper(alignment));
+            jAlignment = javax.swing.JTextField.(upper(value));
             this.jTextField.setHorizontalAlignment(jAlignment);
             this.HorizontalAlignment = alignment;
         end
@@ -131,16 +150,22 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.Parent(this, value)
             set(this.hComboBox, 'Parent', value); %#ok<*MCSUP>
             set(this.hTextField, 'Parent', value);
+            this.Parent = value;
         end
         
         function set.Position(this, value)
+            p = inputParser;
+            addRequired(p, 'Position', @(x) validateattributes(x, {'numeric'},{'vector','numel',4}));
+            parse(p, value);
+            
             set(this.hComboBox, 'Position', value);
             set(this.hTextField, 'Position', value);
+            this.Position = value;
         end
         
         function set.String(this, value)
             p = inputParser;
-            addRequired(p, 'String', @(x) validateattributes(x, {'string','char'}, {}));
+            addRequired(p, 'String', @(x) validateattributes(x, {'char','string'}, {}));
             parse(p, value);
             
             textString = char(value);
@@ -148,24 +173,36 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             this.String = textString;
         end
         
-        function set.Tag(this, value)
-        end
-        
         function set.TooltipString(this, value)
             p = inputParser;
-            addRequired(p, 'TooltipString', @(x) validateattributes(x, {'char'},{'vector'}));
+            addRequired(p, 'TooltipString', @(x) validateattributes(x, {'char','string'},{}));
             parse(p, value);
             
-            this.jTextField.setToolTipText(char(value));
+            tooltip = char(value);
+            this.jTextField.setToolTipText(tooltip);
+            this.TooltipString = tooltip;
         end
         
         function set.Units(this, value)
-        end
-        
-        function set.UserData(this, value)
+            p = inputParser;
+            addRequired(p, 'Units',@(x) ischar(validatestring(x,{'pixels','normalized','points'})));
+            parse(p, value);
+            
+            % apply the new units to the containers of both java objects
+            units = lower(char(value));
+            set(this.hTextField, 'Units', units);
+            set(this.hComboBox, 'Units', units);
         end
         
         function set.Visible(this, value)
+            p = inputParser;
+            addRequired(p, 'Visible', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
+            parse(p, value);
+            
+            visibleState = logical(value);
+            this.jTextField.setVisible(visibleState);
+            this.jComboBox.setVisible(visibleState);
+            this.Visible = visibleState;
         end
     end
 end
