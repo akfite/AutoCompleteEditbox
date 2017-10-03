@@ -74,15 +74,29 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             
             switch keyCode
                 case 10 % ENTER will select the current item from the jComboBox
-                    if any(this.Matches) && this.jComboBox.PopupVisible
-                        selectedText = char(this.jComboBox.getSelectedItem);
-                        selectedText = regexprep(selectedText, '<[^>]+>', '');
-                        this.jTextField.setText(selectedText);
-                        this.jComboBox.hidePopup;
-                    end
+                    setSelectedItem(this);
                 case 27 % ESC hides the popup
                     this.jComboBox.hidePopup;
-                case [38 40] % UP/DOWN will scroll through jComboBox suggestions
+                case {38 40} % UP/DOWN ARROW scrolls through jComboBox suggestions
+                    if ~this.jComboBox.PopupVisible
+                        this.jComboBox.showPopup;
+                        return;
+                    end
+                    
+                    selectedIndex = int32(this.jComboBox.SelectedIndex);
+                    
+                    if keyCode == 38
+                        % UP ARROW: move selection up but don't let it go negative
+                        selectedIndex = selectedIndex - 1;
+                        selectedIndex(selectedIndex < 0) = 0;
+                    else
+                        % DOWN ARROW: move the selection down & prevent exceeding length of list
+                        itemCount = this.jComboBox.ItemCount;
+                        selectedIndex = selectedIndex + 1;
+                        selectedIndex(selectedIndex > (itemCount-1)) = itemCount-1;
+                    end
+                    
+                    this.jComboBox.setSelectedIndex(selectedIndex);
                 otherwise
                     autoComplete(this)
             end
@@ -119,6 +133,15 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             end
             
             this.Matches = matchIndex;
+        end
+        
+        function setSelectedItem(this, ~, ~) % give it 2 extra args so that it can be a callback
+            if any(this.Matches) && this.jComboBox.PopupVisible
+                selectedText = char(this.jComboBox.getSelectedItem);
+                selectedText = regexprep(selectedText, '<[^>]+>', '');
+                this.jTextField.setText(selectedText);
+                this.jComboBox.hidePopup;
+            end
         end
     end
     
