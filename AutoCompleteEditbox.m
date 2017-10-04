@@ -4,6 +4,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     properties
         BackgroundColor = [255 255 255]
+        CaseSensitive = false
         CompletionList = {'sample string'; 'test string'; 'sample test'}
         Enabled     = true
         FontSize    = 10
@@ -113,7 +114,13 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
                 return; % abort early if the search hasn't changed
             end
             
-            matchedText = regexpi(this.CompletionList, textInput, 'match','once');
+            % try to match the typed text to the completion list
+            if this.CaseSensitive
+                matchedText = regexp(this.CompletionList, textInput, 'match','once');
+            else
+                matchedText = regexpi(this.CompletionList, textInput, 'match','once');
+            end
+            
             matchIndex = ~cellfun('isempty', matchedText);
             
             if ~any(matchIndex)
@@ -165,6 +172,14 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             jColor = java.awt.Color(bckgColor(1), bckgColor(2), bckgColor(3));
             this.jTextField.setBackground(jColor);
             this.BackgroundColor = bckgColor;
+        end
+        
+        function set.CaseSensitive(this, value)
+            p = inputParser;
+            addRequired(p, 'CaseSensitive', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
+            parse(p, value);
+            
+            this.CaseSensitive = logical(value);
         end
         
         function set.Enabled(this, value)
