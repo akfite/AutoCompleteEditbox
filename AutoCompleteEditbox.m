@@ -36,26 +36,36 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     %% Constructor
     methods
-        function this = AutoCompleteEditbox(varargin)
-            % create the uicontrols
-            createObjectInFigure(this);
+        function this = AutoCompleteEditbox(parent, varargin)
+            if nargin < 1
+                parent = gcf;
+            end
             
-            % parse args and apply properties to default if not provided
+            % create the uicontrols
+            createObjectInFigure(this, parent);
+            
+            % set all properties to their default values
+            refreshProperties(this);
+            
+            % now overwrite the default props with whatever was provided by the user
+            for i = 1:2:length(varargin)
+                this.(varargin{i}) = varargin{i+1};
+            end
         end
     end
     
     %% Private methods
     methods (Access = private)
-        function createObjectInFigure(this)
+        function createObjectInFigure(this, parent)
             % create the JComboBox first so that it appears hidden behind the textbox
-            [jComboBox, hComboBox] = javacomponent(javax.swing.JComboBox);
+            [jComboBox, hComboBox] = javacomponent(javax.swing.JComboBox, [], parent);
             
             % now create the search field so that it sits on top of the combobox
             jTextField = javax.swing.JTextField;
-            [jTextField, hTextField] = javacomponent(jTextField);
+            [jTextField, hTextField] = javacomponent(jTextField, [], parent);
             
             % update object state
-            this.jTextField = jTextField; %#ok<*PROP>
+            this.jTextField = jTextField; %#ok<*PROPLC,*PROP>
             this.hTextField = hTextField;     
             this.jComboBox = jComboBox; 
             this.hComboBox = hComboBox;
@@ -64,10 +74,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             jTextHCallback = handle(jTextField,'CallbackProperties');
             set(jTextHCallback, 'KeyPressedCallback', @(src,evnt) keyRoutingFcn(this, src, evnt));
             
-            % DEBUG --------------------------------------------
-            set(this.hTextField, 'position', this.Position);
-            set(this.hComboBox, 'position', this.Position);
-            % --------------------------------------------------
+            this.Parent = parent;
         end
         
         function keyRoutingFcn(this, ~, evnt)
@@ -148,6 +155,16 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
                 selectedText = regexprep(selectedText, '<[^>]+>', '');
                 this.jTextField.setText(selectedText);
                 this.jComboBox.hidePopup;
+            end
+        end
+        
+        function refreshProperties(this)
+            props = properties(this);
+            for i = 1:length(props)
+                try
+                    % setter functions actually apply the changes
+                    this.(props{i}) = this.(props{i});
+                end
             end
         end
     end
