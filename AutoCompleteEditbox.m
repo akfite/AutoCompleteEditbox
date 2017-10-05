@@ -11,6 +11,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         FontWeight  = 'normal'
         FontColor   = [0 0 0]
         HorizontalAlignment = 'left'
+        MatchColor  = [0 0 255]
     end
     properties (SetAccess = protected)
         Matches % i want the prop list alphabetical but i cba overloading disp() right now
@@ -138,7 +139,11 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             % highlight the matched text in the popup
             matchedText = matchedText(matchIndex);
             matchList = this.CompletionList(matchIndex);
-            matchList = strrep(matchList, matchedText, strcat('<b><font color=blue>', matchedText, '</b></font>'));
+            matchFormatted = strcat(...
+                sprintf('<b><font color="rgb(%d,%d,%d)">',this.MatchColor), ...
+                matchedText, ...
+                '</b></font>');
+            matchList = strrep(matchList, matchedText, matchFormatted);
             matchList = strcat('<html>',matchList,'</html>');
             
             try
@@ -260,6 +265,16 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             jAlignment = javax.swing.JTextField.(upper(value));
             this.jTextField.setHorizontalAlignment(jAlignment);
             this.HorizontalAlignment = alignment;
+        end
+        
+        function set.MatchColor(this, value)
+            p = inputParser;
+            addRequired(p, 'MatchColor', ...
+                @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
+            parse(p, value); % this is only to generate errors
+            
+            % this is set via html so we don't NEED int types, but do it to stay consistent
+            this.MatchColor = uint8(value);
         end
         
         function set.Parent(this, value)
