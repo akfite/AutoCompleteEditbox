@@ -7,7 +7,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         CaseSensitive = false
         CompletionList = {'sample string'; 'test string'; 'sample test'}
         Enabled     = true
-        FontSize    = 10
+        FontSize    = 12
         FontWeight  = 'normal'
         FontColor   = [0 0 0]
         HorizontalAlignment = 'left'
@@ -30,8 +30,10 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         hTextField
         jComboBox
         hComboBox
-        
-        LastSearch
+    end
+    
+    events (NotifyAccess = protected)
+        EnterKeyPress
     end
     
     %% Constructor
@@ -83,6 +85,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             switch keyCode
                 case 10 % ENTER will select the current item from the jComboBox
                     setSelectedItem(this);
+                    notify(this, 'EnterKeyPress');
                 case 27 % ESC hides the popup
                     this.jComboBox.hidePopup;
                 case {38 40} % UP/DOWN ARROW scrolls through jComboBox suggestions
@@ -113,13 +116,6 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function autoComplete(this)
             textInput = this.String;
             textInput = strrep(textInput, '*', '.*'); % turn wildcards into valid regexp
-            
-            if ~strcmpi(textInput, this.LastSearch)
-                this.LastSearch = textInput;
-            else
-                this.jComboBox.showPopup;
-                return; % abort early if the search hasn't changed
-            end
             
             % try to match the typed text to the completion list
             if this.CaseSensitive
