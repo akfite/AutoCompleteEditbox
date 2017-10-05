@@ -80,6 +80,11 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         end
         
         function keyRoutingFcn(this, ~, evnt)
+            modifiers = get(evnt, 'Modifiers'); % 1 = shift, 2 = ctrl, 8 = alt.  sum for combinations
+            if ~ismember(modifiers, [0 1]) % only allows no modifier or shift to pass through
+                return; % prevents trigger on CTRL+C/V/A
+            end
+            
             keyCode = get(evnt,'ExtendedKeyCode');
             
             switch keyCode
@@ -178,7 +183,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             p = inputParser;
             addRequired(p, 'BackgroundColor', ...
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             % java colors are 8-bit ints, so convert to correct format & set props
             bckgColor = uint8(p.Results.BackgroundColor);
@@ -190,7 +195,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.CaseSensitive(this, value)
             p = inputParser;
             addRequired(p, 'CaseSensitive', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             this.CaseSensitive = logical(value);
         end
@@ -198,7 +203,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.Enabled(this, value)
             p = inputParser;
             addRequired(p, 'Enabled', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             enableState = logical(value);
             this.jTextField.setEnabled(enableState);
@@ -210,7 +215,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             p = inputParser;
             addRequired(p, 'FontColor', ...
                 @(x) validateattributes(x, {'numeric'},{'vector','numel',3,'>=',0,'<=',255}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             % java colors are 8-bit ints, so convert to correct format & set props
             fontColor = uint8(value);
@@ -223,7 +228,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             p = inputParser;
             addRequired(p, 'FontSize', ...
                 @(x) validateattributes(x, {'numeric'},{'scalar','nonnan','positive'}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             fontSize = this.jTextField.getFont.deriveFont(value);
             this.jTextField.setFont(fontSize);
@@ -233,7 +238,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.FontWeight(this, value)
             p = inputParser;
             addRequired(p, 'FontWeight', @(x) ischar(validatestring(x, {'normal','bold'})));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             fontWeight = lower(value);
             switch fontWeight
@@ -250,7 +255,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
             p = inputParser;
             addRequired(p, 'HorizontalAlignment',...
                 @(x) ischar(validatestring(x, {'left','center','right'})));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             jAlignment = javax.swing.JTextField.(upper(value));
             this.jTextField.setHorizontalAlignment(jAlignment);
@@ -266,7 +271,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.Position(this, value)
             p = inputParser;
             addRequired(p, 'Position', @(x) validateattributes(x, {'numeric'},{'vector','numel',4}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             set(this.hComboBox, 'Position', value);
             set(this.hTextField, 'Position', value);
@@ -276,7 +281,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.String(this, value)
             p = inputParser;
             addRequired(p, 'String', @(x) validateattributes(x, {'char','string'}, {}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             textString = char(value);
             this.jTextField.setText(textString);
@@ -286,7 +291,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.TooltipString(this, value)
             p = inputParser;
             addRequired(p, 'TooltipString', @(x) validateattributes(x, {'char','string'},{}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             tooltip = char(value);
             this.jTextField.setToolTipText(tooltip);
@@ -296,7 +301,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.Units(this, value)
             p = inputParser;
             addRequired(p, 'Units',@(x) ischar(validatestring(x,{'pixels','normalized','points'})));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             % apply the new units to the containers of both java objects
             units = lower(char(value));
@@ -307,7 +312,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         function set.Visible(this, value)
             p = inputParser;
             addRequired(p, 'Visible', @(x) validateattributes(x, {'logical','numeric'},{'scalar','binary'}));
-            parse(p, value);
+            parse(p, value); % this is only to generate errors
             
             visibleState = logical(value);
             this.jTextField.setVisible(visibleState);
