@@ -1,6 +1,6 @@
-classdef AutoCompleteEditbox < matlab.mixin.SetGet
-    %AUTOCOMPLETEEDITBOX An editbox with a built-in auto-complete feature.
-    %   h = AUTOCOMPLETEEDITBOX(prop, value, ...) creates an editbox as a child of
+classdef SearchBox < matlab.mixin.SetGet
+    %SEARCHBOX An editbox with a built-in auto-complete feature.
+    %   h = SearchBox(prop, value, ...) creates an editbox as a child of
     %   PARENT with 
     
     properties
@@ -27,7 +27,7 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
         Visible     = true
     end
     
-    properties (Access = protected) % DEBUG: will change to fully protected
+    properties (Access = protected)
         jTextField
         hTextField
         jComboBox
@@ -40,13 +40,13 @@ classdef AutoCompleteEditbox < matlab.mixin.SetGet
     
     %% Constructor
     methods
-        function this = AutoCompleteEditbox(varargin)
+        function this = SearchBox(varargin)
             params = getInitialConfiguration(this, varargin{:});
             
             % create the uicontrols with jTextField and jComboBox defaults
             createObjectInFigure(this, params.parent);
             
-            % initialize settings for the AutoCompleteEditbox wrapper class
+            % initialize settings for the SearchBox wrapper class
             props = fieldnames(params);
             for i = 1:length(props)
                 prop = props{i};
