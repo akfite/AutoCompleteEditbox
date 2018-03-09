@@ -15,10 +15,10 @@ classdef SearchBox < matlab.mixin.SetGet
         MatchFontColor = [0 0 255]
     end
     properties (SetAccess = protected)
-        Matches % i want the prop list alphabetical but i cba overloading disp() right now
+        Matches % i want the prop list alphabetical and i'm not eager to overload disp()...
     end
     properties
-        Parent      = []
+        Parent      = [] % default is really gcf but let's avoid calling gcf until args are parsed
         Position    = [20 20 200 26]
         String      = ''
         TooltipString = ''
@@ -77,14 +77,13 @@ classdef SearchBox < matlab.mixin.SetGet
             set(jTextHCallback, 'KeyPressedCallback', @(src,evnt) keyRoutingFcn(this, src, evnt));
         end
         
-        function keyRoutingFcn(this, src, evnt)
+        function keyRoutingFcn(this, ~, evnt)
             modifiers = get(evnt, 'Modifiers'); % 1 = shift, 2 = ctrl, 8 = alt.  sum for combinations
             if ~ismember(modifiers, [0 1]) % only allows no modifier or shift to pass through
                 return; % prevents trigger on CTRL+C/V/A
             end
             
             keyCode = get(evnt,'ExtendedKeyCode');
-            disp(src)
             
             switch keyCode
                 case 10 % ENTER will select the current item from the jComboBox
@@ -99,7 +98,6 @@ classdef SearchBox < matlab.mixin.SetGet
                     end
                     
                     selectedIndex = int32(this.jComboBox.SelectedIndex);
-                    fprintf('Original Index: %d\n', selectedIndex);
                     
                     if keyCode == 38
                         % UP ARROW: move selection up but don't let it go negative
@@ -111,9 +109,9 @@ classdef SearchBox < matlab.mixin.SetGet
                         selectedIndex = selectedIndex + 1;
                         selectedIndex(selectedIndex > (itemCount-1)) = itemCount-1;
                     end
-                    fprintf('New Index: %d\n', selectedIndex);
+                    
                     this.jComboBox.setSelectedIndex(selectedIndex);
-                    fprintf('Post Set: %d\n', int32(this.jComboBox.SelectedIndex));
+                    
                 otherwise
                     autoComplete(this)
             end
@@ -121,7 +119,21 @@ classdef SearchBox < matlab.mixin.SetGet
         
         function autoComplete(this)
             textInput = this.String;
-            textInput = strrep(textInput, '*', '.*'); % turn wildcards into valid regexp
+            
+            if isempty(textInput)
+                % when the input is empty, 
+                try
+                    this.jComboBox.setModel(javax.swing.DefaultComboBoxModel(this.CompletionList));
+                    this.jComboBox.showPopup;
+                catch ex
+                    warning(ex.message);
+                end
+                
+                return
+            end
+            
+            % turn wildcards into valid regexp
+            textInput = strrep(textInput, '*', '.*');
             
             % try to match the typed text to the completion list
             if this.CaseSensitive
@@ -132,7 +144,7 @@ classdef SearchBox < matlab.mixin.SetGet
             
             this.Matches = ~cellfun('isempty', matchedText);
             
-            % highlight the matched text in the popup
+            % color the parts of the text that match in the popup and show the popupMenu
             if any(this.Matches)
                 matchedText = matchedText(this.Matches);
                 matchList = this.CompletionList(this.Matches);
@@ -147,6 +159,7 @@ classdef SearchBox < matlab.mixin.SetGet
                     this.jComboBox.setModel(javax.swing.DefaultComboBoxModel(matchList));
                     this.jComboBox.showPopup;
                 catch ex
+                    warning(ex.message)
                 end
             else
                 this.jComboBox.hidePopup;
@@ -154,7 +167,7 @@ classdef SearchBox < matlab.mixin.SetGet
         end
         
         function setSelectedItem(this, ~, ~) % give it 2 extra args so that it can be a callback
-            if any(this.Matches) && this.jComboBox.PopupVisible
+            if this.jComboBox.PopupVisible
                 selectedText = char(this.jComboBox.getSelectedItem);
                 selectedText = regexprep(selectedText, '<[^>]+>', '');
                 this.jTextField.setText(selectedText);
@@ -252,7 +265,7 @@ classdef SearchBox < matlab.mixin.SetGet
         
         function set.CompletionList(this, value)
             p = inputParser;
-            addRequired(p, 'CompletionList', @(x) validateattributes(x, {'cell','string'},{'vector'}));
+            addRequired(p, 'CompletionList', @(x) validateattributes(x, {'cell','string'},{}));
             parse(p, value); % this is only to generate errors
             
             % force type to be a cellstr column vector
@@ -263,7 +276,9 @@ classdef SearchBox < matlab.mixin.SetGet
             end
                 
             this.CompletionList = unique(value);
-            autoComplete(this);
+            this.CompletionList = this.CompletionList(~cellfun(@isempty, this.CompletionList));
+            this.jComboBox.setModel(javax.swing.DefaultComboBoxModel(this.CompletionList));
+            this.jComboBox.hidePopup;
         end
         
         function set.Enabled(this, value)
