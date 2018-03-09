@@ -47,7 +47,7 @@ classdef SearchBox < matlab.mixin.SetGet
             createObjectInFigure(this, params.parent);
             
             % initialize settings for the SearchBox wrapper class
-            props = fieldnames(params);
+            props = flipud(fieldnames(params)); % flipud ensures 'Units' goes before 'Position'
             for i = 1:length(props)
                 prop = props{i};
                 set(this, prop, params.(prop));
@@ -92,7 +92,7 @@ classdef SearchBox < matlab.mixin.SetGet
                 case 27 % ESC hides the popup
                     this.jComboBox.hidePopup;
                 case {38 40} % UP/DOWN ARROW scrolls through jComboBox suggestions
-                    if ~this.jComboBox.PopupVisible
+                    if (~this.jComboBox.PopupVisible) && any(this.Matches)
                         this.jComboBox.showPopup;
                         return;
                     end
