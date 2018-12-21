@@ -18,6 +18,7 @@ classdef SearchBox < matlab.mixin.SetGet
         Matches % i want the prop list alphabetical and i'm not eager to overload disp()...
     end
     properties
+        MaximumRowCount = 8
         Parent      = [] % default is really gcf but let's avoid calling gcf until args are parsed
         Position    = [20 20 200 26]
         String      = ''
@@ -35,7 +36,8 @@ classdef SearchBox < matlab.mixin.SetGet
     end
     
     events (NotifyAccess = protected)
-        EnterKeyPressed
+        EnterKeyPressed % notifies any time enter is pressed
+        ItemSelected % notifies when something is chosen from the list
     end
     
     %% Constructor
@@ -79,25 +81,35 @@ classdef SearchBox < matlab.mixin.SetGet
         
         function keyRoutingFcn(this, ~, evnt)
             modifiers = get(evnt, 'Modifiers'); % 1 = shift, 2 = ctrl, 8 = alt.  sum for combinations
-            if ~ismember(modifiers, [0 1]) % only allows no modifier or shift to pass through
+            if ~ismember(modifiers, [0 1]) % only allows no modifier & shift to pass through
                 return; % prevents trigger on CTRL+C/V/A
             end
             
             keyCode = get(evnt,'ExtendedKeyCode');
-            
+            selectedIndex = int32(this.jComboBox.SelectedIndex);
+
             switch keyCode
                 case 10 % ENTER will select the current item from the jComboBox
-                    setSelectedItem(this);
                     notify(this, 'EnterKeyPressed');
+                    if this.jComboBox.PopupVisible
+                        setSelectedItem(this);
+                        notify(this, 'ItemSelected');
+                    end
                 case 27 % ESC hides the popup
                     this.jComboBox.hidePopup;
+                case {33 36} % PAGE UP, HOME
+                    if this.jComboBox.popupVisible
+                        this.jComboBox.setSelectedIndex(0);
+                    end
+                case {34 35} % PAGE DOWN, END
+                    if this.jComboBox.popupVisible
+                        this.jComboBox.setSelectedIndex(this.jComboBox.ItemCount-1);
+                    end
                 case {38 40} % UP/DOWN ARROW scrolls through jComboBox suggestions
-                    if (~this.jComboBox.PopupVisible) && any(this.Matches)
+                    if (~this.jComboBox.PopupVisible) && (any(this.Matches) || isempty(this.String))
                         this.jComboBox.showPopup;
                         return;
                     end
-                    
-                    selectedIndex = int32(this.jComboBox.SelectedIndex);
                     
                     if keyCode == 38
                         % UP ARROW: move selection up but don't let it go negative
@@ -111,7 +123,9 @@ classdef SearchBox < matlab.mixin.SetGet
                     end
                     
                     this.jComboBox.setSelectedIndex(selectedIndex);
-                    
+                case {16 20 37 39 127 155} 
+                    % NO ACTION TAKEN -- don't try to autocomplete non-alphabet chars
+                    % this list includes: shift, caps lock, left arrow, right arrow, delete, insert
                 otherwise
                     autoComplete(this)
             end
@@ -277,6 +291,10 @@ classdef SearchBox < matlab.mixin.SetGet
                 
             this.CompletionList = unique(value);
             this.CompletionList = this.CompletionList(~cellfun(@isempty, this.CompletionList));
+            % sort by lowercase alphabetical
+            [~, isort] = sort(lower(this.CompletionList));
+            this.CompletionList = this.CompletionList(isort);
+            % apply change to the jComboBox
             this.jComboBox.setModel(javax.swing.DefaultComboBoxModel(this.CompletionList));
             this.jComboBox.hidePopup;
         end
@@ -357,6 +375,16 @@ classdef SearchBox < matlab.mixin.SetGet
             
             % this is set via html so we don't NEED int types, but do it to stay consistent
             this.MatchFontColor = uint8(value);
+        end
+        
+        function set.MaximumRowCount(this, value)
+            p = inputParser;
+            addRequired(p, 'MaximumRowCount', ...
+                @(x) validateattributes(x, {'numeric'},{'scalar','nonnan','positive','integer'}));
+            parse(p, value); % this is only to generate errors
+            
+            this.jComboBox.setMaximumRowCount(value);
+            this.MaximumRowCount = value;
         end
         
         function set.Parent(this, value)
